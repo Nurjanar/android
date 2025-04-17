@@ -66,6 +66,12 @@ class FeedFragment : Fragment() {
         viewModel.data.observe(viewLifecycleOwner) { state ->
             adapter.submitList(state.posts)
             binding.emptyText.isVisible = state.empty
+
+            if (viewModel.newPostsAvailable.value == true) {
+                binding.newPostsBanner.isVisible = true
+            } else {
+                binding.newPostsBanner.isVisible = false
+            }
         }
 
         binding.swiperefresh.setOnRefreshListener {
@@ -74,6 +80,20 @@ class FeedFragment : Fragment() {
 
         binding.fab.setOnClickListener {
             findNavController().navigate(R.id.action_feedFragment_to_newPostFragment)
+        }
+
+        viewModel.newerCount.observe(viewLifecycleOwner) { count ->
+            if (count > 0) {
+                viewModel.newPostsAvailable.value = true
+            } else {
+                viewModel.newPostsAvailable.value = false
+            }
+        }
+
+        binding.newPostsBanner.setOnClickListener {
+            binding.list.smoothScrollToPosition(0)
+            viewModel.showNewPosts()
+            binding.newPostsBanner.isVisible = false
         }
 
         return binding.root

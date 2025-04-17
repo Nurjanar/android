@@ -1,7 +1,6 @@
 package ru.netology.nmedia.repository
 
 import androidx.lifecycle.*
-import kotlinx.coroutines.newSingleThreadContext
 import okio.IOException
 import ru.netology.nmedia.api.*
 import ru.netology.nmedia.dao.PostDao
@@ -12,9 +11,16 @@ import ru.netology.nmedia.entity.toEntity
 import ru.netology.nmedia.error.ApiError
 import ru.netology.nmedia.error.NetworkError
 import ru.netology.nmedia.error.UnknownError
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.*
+import okhttp3.internal.isSensitiveHeader
+import ru.netology.nmedia.error.AppError
+
 
 class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
     override val data = dao.getAll().map(List<PostEntity>::toDto)
+        .flowOn(Dispatchers.Default)
 
     override suspend fun getAll() {
         try {
@@ -30,6 +36,30 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         } catch (e: Exception) {
             throw UnknownError
         }
+    }
+
+    override fun getNewerCount(id: Long): Flow<Int> = flow {
+        while (true) {
+            delay(10_000L)
+            val response = PostsApi.service.getNewer(id)
+            if (!response.isSuccessful) {
+                throw ApiError(response.code(), response.message())
+            }
+            val body = response.body() ?: throw ApiError(response.code(), response.message())
+
+            val existingCount = dao.count()
+            if (existingCount > 0) {
+                dao.insert(body.toEntity())
+                emit(body.size)
+            } else {
+                emit(0)
+            }
+        }
+    }.catch { e -> throw AppError.from(e) }
+        .flowOn(Dispatchers.Default)
+
+    override suspend fun updateVisibility(visible: Boolean) {
+        dao.updateVisibility(true)
     }
 
     override suspend fun save(post: Post) {
@@ -62,8 +92,8 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
         }
     }
 
-    override suspend fun likeById(id: Long) {
-        val oldState = data.value?.find { it.id == id } ?: throw UnknownError
+    override suspend fun likeById(id: Long): Flow<Unit> = flow {
+        val oldState = data.first().find { it.id == id } ?: throw UnknownError
         try {
             dao.likeById(id)
             val response = if (!oldState.likedByMe) {
@@ -74,8 +104,9 @@ class PostRepositoryImpl(private val dao: PostDao) : PostRepository {
             if (!response.isSuccessful) {
                 throw ApiError(response.code(), response.message())
             }
+            emit(Unit)
         } catch (e: IOException) {
-            val newState = data.value?.find { it.id == id }
+            val newState = data.first().find { it.id == id }
             newState?.likes = oldState.likes
             newState?.likedByMe = oldState.likedByMe
             throw NetworkError

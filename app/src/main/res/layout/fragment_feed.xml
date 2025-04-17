@@ -57,5 +57,18 @@
         android:contentDescription="@string/add_post"
         android:focusable="true"
         app:srcCompat="@drawable/ic_add_24dp" />
+
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/newPostsBanner"
+        style="@style/Widget.MaterialComponents.FloatingActionButton"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center"
+        android:layout_margin="@dimen/fab_margin"
+        android:clickable="true"
+        android:focusable="true"
+        android:text="@string/new_posts_banner"
+        android:visibility="gone"
+        app:icon="@drawable/ic_up_24" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
