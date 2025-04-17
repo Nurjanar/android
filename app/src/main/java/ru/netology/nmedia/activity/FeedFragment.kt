@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.GONE
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -68,9 +70,9 @@ class FeedFragment : Fragment() {
             binding.emptyText.isVisible = state.empty
 
             if (viewModel.newPostsAvailable.value == true) {
-                binding.newPostsBanner.isVisible = true
+                binding.newPostsBanner.visibility = VISIBLE
             } else {
-                binding.newPostsBanner.isVisible = false
+                binding.newPostsBanner.visibility = GONE
             }
         }
 
@@ -93,7 +95,7 @@ class FeedFragment : Fragment() {
         binding.newPostsBanner.setOnClickListener {
             binding.list.smoothScrollToPosition(0)
             viewModel.showNewPosts()
-            binding.newPostsBanner.isVisible = false
+            binding.newPostsBanner.visibility = GONE
         }
 
         return binding.root

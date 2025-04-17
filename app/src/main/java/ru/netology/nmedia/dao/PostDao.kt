@@ -37,7 +37,7 @@ interface PostDao {
     )
     suspend fun likeById(id: Long)
 
-    @Query("UPDATE PostEntity SET isVisible = 1")
+    @Query("UPDATE PostEntity SET isVisible = :visible")
     suspend fun updateVisibility(visible: Boolean)
 
 }
