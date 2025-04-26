@@ -57,5 +57,6 @@
         android:contentDescription="@string/add_post"
         android:focusable="true"
         app:srcCompat="@drawable/ic_add_24dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

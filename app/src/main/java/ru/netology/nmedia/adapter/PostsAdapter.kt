@@ -1,22 +1,26 @@
 package ru.netology.nmedia.adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.netology.nmedia.BuildConfig
 import ru.netology.nmedia.R
 import ru.netology.nmedia.databinding.CardPostBinding
 import ru.netology.nmedia.dto.Post
 import ru.netology.nmedia.view.loadCircleCrop
 
+
 interface OnInteractionListener {
     fun onLike(post: Post) {}
     fun onEdit(post: Post) {}
     fun onRemove(post: Post) {}
     fun onShare(post: Post) {}
+    fun openPhoto(post: Post) {}
 }
 
 class PostsAdapter(
@@ -41,11 +45,21 @@ class PostViewHolder(
     fun bind(post: Post) {
         binding.apply {
             author.text = post.author
-            published.text = post.published
+            published.text = post.published.toString()
             content.text = post.content
             avatar.loadCircleCrop("${BuildConfig.BASE_URL}/avatars/${post.authorAvatar}")
             like.isChecked = post.likedByMe
             like.text = "${post.likes}"
+            if (post.attachment?.url.isNullOrBlank()) {
+                image.visibility = View.GONE
+            } else {
+                image.visibility = View.VISIBLE
+                Glide.with(image)
+                    .load("${BuildConfig.BASE_URL}/media/${post.attachment?.url}")
+                    .error(R.drawable.ic_photo_24dp)
+                    .timeout(10_000)
+                    .into(image)
+            }
 
             menu.setOnClickListener {
                 PopupMenu(it.context, it).apply {
@@ -74,6 +88,10 @@ class PostViewHolder(
 
             share.setOnClickListener {
                 onInteractionListener.onShare(post)
+            }
+
+            image.setOnClickListener {
+                onInteractionListener.openPhoto(post)
             }
         }
     }
